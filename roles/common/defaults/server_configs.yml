@@ -1,0 +1,18 @@
+- name: Configure server
+  hosts: "{{ host }}"
+  tasks:
+    - name: set timezone to America/New_York
+      timezone:
+        name: America/New_York
+      become: yes
+      become_method: sudo
+    - hostname:
+        name: "{{ host }}"
+      become: yes
+      become_method: sudo
+    - name: Update all packages to the latest version
+      apt:
+        upgrade: dist
+        update_cache: yes
+      become: yes
+      become_method: sudo

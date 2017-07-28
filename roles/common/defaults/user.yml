@@ -1,0 +1,54 @@
+- name: Setup User and permissions
+  hosts: "{{ host }}"
+  become: yes
+  become_method: sudo
+  tasks:
+    - name: Create user {{ user }}
+      user:
+        name: "{{ user }}"
+        shell: /bin/bash
+        groups: www-data
+        password: "{{ user }}"
+      with_items: users
+
+    - name: Change owner of web directory to {{ user }}
+      file:
+        state: directory
+        mode: 0755
+        path: /var/www
+        owner: "{{ user }}"
+        group: www-data
+        recurse: yes
+
+    - name: make .ssh directory
+      file:
+        path: /home/{{ user }}/.ssh
+        state: directory
+        mode: 0755
+      become: yes
+      become_user: "{{ user }}"
+
+    - name: make .composer directory
+      file:
+        path: /home/{{ user }}/.composer
+        state: directory
+        mode: 0755
+      become: yes
+      become_user: "{{ user }}"
+
+    - name: Change Apache User
+      lineinfile: dest=/etc/apache2/envvars regexp="{{ item.regexp }}" line="{{ item.line }}" backup=yes
+      with_items:
+        - { regexp: "^export APACHE_RUN_USER=", line: "export APACHE_RUN_USER={{ user }}" }
+        - { regexp: "^export APACHE_RUN_GROUP=", line: "export APACHE_RUN_GROUP=www-data" }
+
+    - name: Set Permissions
+      file:
+        state: directory
+        mode: 0755
+        path: /var/lock/apache2
+        owner: "{{ user }}"
+        recurse: yes
+
+    - name: copy authorized_keys to web user
+      copy: remote_src=true src=/home/{{ ansible_user }}/.ssh/authorized_keys dest=/home/{{ user }}/.ssh/authorized_keys

@@ -1,0 +1,68 @@
+- name: Install and configure PHP
+  hosts: "{{ host }}"
+  become: yes
+  vars:
+    upload_max_file_size: 2M
+    max_input_vars: 1000
+    cli_memory_limit: 2048M
+    apache_memory_limit: 512M
+  tasks:
+    - name: PHP | PHP 7.1 repo
+      apt_repository:
+        repo: 'ppa:ondrej/php'
+        state: present
+
+    - name: apt-get update
+      apt:
+        update_cache: yes
+
+    - name: Install PHP packages
+      apt: name={{ item }} state=installed
+      with_items:
+        - php7.1
+        - php7.1-cli
+        - php7.1-mysql
+        - php7.1-intl
+        - php7.1-curl
+        - php7.1-gd
+        - php7.1-mcrypt
+        - php7.1-apcu
+        - php7.1-xml
+        - php7.1-zip
+        - php7.1-mbstring
+        - php7.1-mysql
+        - php7.1-tokenizer
+        - php7.1-pdo
+        - php7.1-xml
+
+    - name: Enable PHP packages
+      command: phpenmod {{ item }}
+      with_items:
+        - mcrypt
+
+    - name: Set PHP 7.1
+      command: update-alternatives --set php /usr/bin/php7.1
+
+    - name: PHP CLI | configure php.ini
+      lineinfile: dest=/etc/php/7.1/cli/php.ini regexp="{{ item.regexp }}" line="{{ item.line }}" backup=yes
+      with_items:
+        - { regexp: "date.timezone", line: "date.timezone = 'UTC'" }
+        - { regexp: "short_open_tag =", line: "short_open_tag = Off" }
+        - { regexp: "expose_php =", line: "expose_php = Off" }
+        - { regexp: "memory_limit =", line: "memory_limit = {{ cli_memory_limit }}" }
+        - { regexp: "display_errors =", line: "display_errors = Off" }
+        - { regexp: "upload_max_filesize =", line: "upload_max_filesize = {{ upload_max_file_size }}" }
+        - { regexp: "post_max_size =", line: "post_max_size = {{ upload_max_file_size }}" }
+        - { regexp: "max_input_vars =", line: "max_input_vars = {{ max_input_vars }}" }
+
+    - name: PHP Web | configure php.ini
+      lineinfile: dest=/etc/php/7.1/apache2/php.ini regexp="{{ item.regexp }}" line="{{ item.line }}" backup=yes
+      with_items:
+        - { regexp: "date.timezone", line: "date.timezone = 'UTC'" }
+        - { regexp: "short_open_tag =", line: "short_open_tag = Off" }
+        - { regexp: "expose_php =", line: "expose_php = Off" }
+        - { regexp: "memory_limit =", line: "memory_limit = {{ apache_memory_limit }}" }
+        - { regexp: "display_errors =", line: "display_errors = Off" }
+        - { regexp: "upload_max_filesize =", line: "upload_max_filesize = {{ upload_max_file_size }}" }
+        - { regexp: "post_max_size =", line: "post_max_size = {{ upload_max_file_size }}" }
+        - { regexp: "max_input_vars =", line: "max_input_vars = {{ max_input_vars }}" }

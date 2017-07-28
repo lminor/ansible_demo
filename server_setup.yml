@@ -1,0 +1,13 @@
+- name: Build Server
+  hosts: "{{ host }}"
+  roles:
+    - { role: soplakanets.hosts }
+- include: roles/common/defaults/server_configs.yml
+- include: roles/common/defaults/php.yml
+- include: roles/common/defaults/db.yml
+  when: ansible_user == "vagrant"
+- include: roles/common/defaults/apache_config.yml
+- include: roles/common/defaults/user.yml
+- include: roles/common/defaults/git.yml
+- include: roles/common/defaults/composer.yml
+- include: roles/common/defaults/laravel/install_laravel.yml

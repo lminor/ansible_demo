@@ -1,0 +1,21 @@
+---
+# Vagrant machine
+ansible_host: 192.168.47.110
+ansible_user: vagrant
+ansible_ssh_private_key_file: .vagrant/machines/default/virtualbox/private_key
+host_key_checking: False
+
+# Playbook settings
+user: demo_user
+db_host: 127.0.0.1
+db_user: ansible_demo
+branch: master
+project_repo: https://github.com/laravel/laravel.git
+project_root: /var/www/html
+
+# Host configs
+save_hosts:
+- name: ansible-demo.dev
+  ip:   "{{ ansible_host }}"
+  aliases:
+  - ansible-demo

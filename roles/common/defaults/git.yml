@@ -1,0 +1,16 @@
+- name: GIT
+  hosts: "{{ host }}"
+  become: yes
+  tasks:
+    - name: GIT | Install GIT
+      apt: name=git-all state=present
+
+    - name: Clear out project directory
+      file:
+        state: absent
+        path: "{{ project_root }}"
+
+    - name: Clone {{ project_repo }} - {{ branch }}
+      git: repo={{ project_repo }} dest={{ project_root }} version={{ branch }} force=yes
+      become: yes
+      become_user: "{{ user }}"

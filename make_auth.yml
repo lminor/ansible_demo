@@ -1,0 +1,17 @@
+- name: Make Authentication
+  hosts: "{{ host }}"
+  become: yes
+  tasks:
+    - name: Build Authentication
+      command: php artisan make:auth
+      args:
+        chdir: "{{ project_root }}"
+
+    - name: Set Permissions
+      file:
+        state: directory
+        mode: 0755
+        path: /var/www/html
+        owner: "{{ user }}"
+        group: www-data
+        recurse: yes

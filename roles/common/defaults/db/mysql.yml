@@ -1,0 +1,36 @@
+- name: Install and configure MySQL
+  hosts: "{{ host }}"
+  vars:
+    mysql_root_pass: mysql
+  tasks:
+    - name: MySQL | Set MySQL root pass
+      debconf: name='mysql-server' question='mysql-server/root_password' value='{{mysql_root_pass | quote}}' vtype='password'
+      become: yes
+      become_method: sudo
+
+    - name: MySQL | Confirm MySQL root pass
+      debconf: name='mysql-server' question='mysql-server/root_password_again' value='{{mysql_root_pass | quote}}' vtype='password'
+      become: yes
+      become_method: sudo
+
+    - name: Install MySQL
+      apt: name=mysql-server state=present
+      become: yes
+      become_method: sudo
+
+    - name: Install Common Software
+      apt: name=software-properties-common state=present
+      become: yes
+      become_method: sudo
+
+    - name: Install the Python MySQLB module
+      apt: name=python-mysqldb state=installed
+      become: yes
+      become_method: sudo
+
+    - name: Create 'magento' DB
+      mysql_db: name={{db_user | quote}} state=present collation=utf8_general_ci login_user=root login_password={{mysql_root_pass | quote}}
+
+    - mysql_user: name={{db_user | quote}} password='{{db_pass | quote}}' priv='*.*:ALL,GRANT' state=present login_user=root login_password={{mysql_root_pass | quote}}
+      become: yes
+      become_method: sudo

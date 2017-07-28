@@ -1,0 +1,51 @@
+- name: Install and configure Laravel
+  hosts: "{{ host }}"
+  become: yes
+  tasks:
+    - name: Copy ENV
+      copy:
+        remote_src: true
+        src: /var/www/html/.env.example
+        dest: /var/www/html/.env
+        mode: 0755
+        owner: "{{ user }}"
+        group: www-data
+
+    - name: Modify ENV
+      lineinfile: dest=/var/www/html/.env regexp="{{ item.regexp }}" line="{{ item.line }}"
+      with_items:
+        - { regexp: "DB_DATABASE=homestead", line: "DB_DATABASE={{ db_user }}" }
+        - { regexp: "DB_USERNAME=homestead", line: "DB_USERNAME={{ db_user }}" }
+        - { regexp: "DB_PASSWORD=secret", line: "DB_PASSWORD={{ db_pass }}" }
+        - { regexp: '^APP_URL=', line: "APP_URL=http://{{ host }}" }
+
+    - name: Composer install
+      command: composer install
+      args:
+        chdir: "{{ project_root }}"
+
+    - name: Laravel App Key
+      command: php artisan key:generate
+      args:
+        chdir: "{{ project_root }}"
+
+    - name: Laravel Cache
+      command: php artisan config:cache
+      args:
+        chdir: "{{ project_root }}"
+
+    - name: Set Permissions
+      file:
+        state: directory
+        mode: 0755
+        path: /var/www/html
+        owner: "{{ user }}"
+        group: www-data
+        recurse: yes
+
+    - name: Restart Apache
+      service:
+        name: apache2
+        state: restarted
+      become: yes
+      become_method: sudo
